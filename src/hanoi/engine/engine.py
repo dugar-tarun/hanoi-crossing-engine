@@ -1,12 +1,3 @@
-"""Engine entry points: ``initial_state``, ``step``, ``legal_actions``, ``is_terminal``.
-
-Counter discipline: a legal action bumps both ``attempt_count`` and
-``step_count``; an illegal action bumps only ``attempt_count``; a terminal
-state rejects further actions (``GAME_OVER``) without touching counters. A win
-is checked only at construction and after a successful ``Place``; reaching
-``attempt_count == max_turns`` without a winner yields ``DRAW``.
-"""
-
 from __future__ import annotations
 
 from dataclasses import dataclass
