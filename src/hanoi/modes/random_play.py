@@ -117,7 +117,11 @@ def main(argv: list[str] | None = None) -> None:
         state, result = step(state, player, action)
         step_num += 1  # noqa: SIM113 (counts only steps taken, not loop iterations)
 
-        legal_tag = "OK" if result.legal else f"ILLEGAL({result.illegality.name})"
+        if result.legal:
+            legal_tag = "OK"
+        else:
+            assert result.illegality is not None
+            legal_tag = f"ILLEGAL({result.illegality.name})"
         terminal_tag = f" [{result.terminal.name}]" if result.terminal is not None else ""
         print(
             f"  Step {step_num:4d}: player={player!r}  action={action!r}"

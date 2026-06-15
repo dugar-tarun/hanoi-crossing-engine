@@ -149,7 +149,11 @@ def main(argv: list[str] | None = None) -> None:
 
     for i, (player, action) in enumerate(zip(turn_order, actions, strict=True)):
         state, result = step(state, player, action)
-        legal_tag = "OK" if result.legal else f"ILLEGAL({result.illegality.name})"
+        if result.legal:
+            legal_tag = "OK"
+        else:
+            assert result.illegality is not None
+            legal_tag = f"ILLEGAL({result.illegality.name})"
         terminal_tag = f" [{result.terminal.name}]" if result.terminal is not None else ""
         print(
             f"  Step {i + 1:3d}: player={player!r}  action={action!r}  -> {legal_tag}{terminal_tag}"
