@@ -1,21 +1,17 @@
 """JSON-friendly ``to_dict`` / ``from_dict`` codecs for the engine value types.
 
-The codec is intentionally explicit — no third-party dataclass/JSON glue.
-Round-tripping is exact for ``GameConfig``, ``GameState``, and ``Action``.
+Explicit, dependency-free, and exact round-tripping for ``GameConfig``,
+``GameState``, and ``Action``.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-from .actions import Action, Lift, Place, SKIP, _Skip
-from .config import GameConfig, PlayerId, PoleId, PoleSpec
+from .actions import SKIP, Action, Lift, Place, _Skip
+from .config import GameConfig, PoleSpec
 from .state import GameState, Status, _freeze_hands, _freeze_poles
 
-
-# ----------------------------------------------------------------------------
-# Action
-# ----------------------------------------------------------------------------
 
 def action_to_dict(action: Action) -> dict[str, Any]:
     if isinstance(action, _Skip):
@@ -38,10 +34,6 @@ def action_from_dict(data: dict[str, Any]) -> Action:
     raise ValueError(f"unknown action dict: {data!r}")
 
 
-# ----------------------------------------------------------------------------
-# Config
-# ----------------------------------------------------------------------------
-
 def pole_spec_to_dict(spec: PoleSpec) -> dict[str, Any]:
     return {
         "id": spec.id,
@@ -62,9 +54,8 @@ def config_to_dict(config: GameConfig) -> dict[str, Any]:
     return {
         "players": list(config.players),
         "poles": [pole_spec_to_dict(p) for p in config.poles],
-        # Lists, not tuples, so the dict is JSON-encodable as-is.
         "initial_stacks": {pid: list(stack) for pid, stack in config.initial_stacks.items()},
-        # Disk owner keys are ints; JSON requires string keys, so we stringify.
+        # JSON object keys must be strings, so stringify the int disk ids.
         "disk_owner": {str(d): owner for d, owner in config.disk_owner.items()},
         "max_turns": config.max_turns,
     }
@@ -80,17 +71,11 @@ def config_from_dict(data: dict[str, Any]) -> GameConfig:
     )
 
 
-# ----------------------------------------------------------------------------
-# State
-# ----------------------------------------------------------------------------
-
 def state_to_dict(state: GameState, *, include_config: bool = True) -> dict[str, Any]:
     """Serialize a ``GameState``.
 
-    ``include_config=True`` produces a self-contained snapshot that can be
-    reconstructed without external context. Pass ``False`` if you intend to
-    pair the state dict with a separately-serialized config, e.g. when storing
-    many states from a single game.
+    ``include_config=True`` produces a self-contained snapshot; pass ``False``
+    to pair the state with a separately-serialized config.
     """
     payload: dict[str, Any] = {
         "poles": {pid: list(stack) for pid, stack in state.poles.items()},
@@ -105,9 +90,7 @@ def state_to_dict(state: GameState, *, include_config: bool = True) -> dict[str,
     return payload
 
 
-def state_from_dict(
-    data: dict[str, Any], *, config: GameConfig | None = None
-) -> GameState:
+def state_from_dict(data: dict[str, Any], *, config: GameConfig | None = None) -> GameState:
     cfg = config if config is not None else config_from_dict(data["config"])
     return GameState(
         config=cfg,

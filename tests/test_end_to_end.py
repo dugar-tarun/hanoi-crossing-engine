@@ -17,28 +17,25 @@ they cover:
 
 from __future__ import annotations
 
+from conftest import make_state, play
 from hanoi.engine import (
+    SKIP,
     GameConfig,
-    GameState,
     IllegalReason,
     Lift,
     Place,
-    SKIP,
     Status,
     Terminal,
     build_two_player_config,
     initial_state,
-    is_terminal,
     is_won_for,
     step,
 )
 
-from conftest import make_state, play
-
-
 # ----------------------------------------------------------------------------
 # Spec example: N=1, A wins after 3 moves.
 # ----------------------------------------------------------------------------
+
 
 def test_spec_example_n1_a_wins() -> None:
     cfg = build_two_player_config(1)
@@ -68,6 +65,7 @@ def test_spec_example_n1_a_wins() -> None:
 # N=2: A wins by transporting their 2 disks to 3a using shared pole as scratch.
 # ----------------------------------------------------------------------------
 
+
 def test_two_disk_solo_solve_a_wins() -> None:
     """Classic 3-move-per-disk Hanoi: A solos 1a -> 3a using 2 as buffer.
 
@@ -76,12 +74,12 @@ def test_two_disk_solo_solve_a_wins() -> None:
     cfg = build_two_player_config(2, max_turns=200)
     s = initial_state(cfg)
     moves = [
-        ("A", Lift("1a")),    # disk 1 in hand.
-        ("A", Place("2")),    # disk 1 -> shared pole.
-        ("A", Lift("1a")),    # disk 3 in hand.
-        ("A", Place("3a")),   # disk 3 -> 3a (bottom).
-        ("A", Lift("2")),     # disk 1 in hand.
-        ("A", Place("3a")),   # disk 1 -> on top of disk 3 -> A WINS.
+        ("A", Lift("1a")),  # disk 1 in hand.
+        ("A", Place("2")),  # disk 1 -> shared pole.
+        ("A", Lift("1a")),  # disk 3 in hand.
+        ("A", Place("3a")),  # disk 3 -> 3a (bottom).
+        ("A", Lift("2")),  # disk 1 in hand.
+        ("A", Place("3a")),  # disk 1 -> on top of disk 3 -> A WINS.
     ]
     s = play(s, moves)
     assert s.status is Status.WON
@@ -96,9 +94,8 @@ def test_two_disk_solo_solve_a_wins() -> None:
 # N=3: full Hanoi solve via a recursive solver -> A wins.
 # ----------------------------------------------------------------------------
 
-def _solve_hanoi(
-    n: int, src: str, dst: str, spare: str
-) -> list[tuple[str, str]]:
+
+def _solve_hanoi(n: int, src: str, dst: str, spare: str) -> list[tuple[str, str]]:
     """Return the canonical (src, dst) move list for a 3-pole Hanoi solve.
 
     Each tuple is ``(from_pole, to_pole)``.  The caller turns these into
@@ -107,9 +104,7 @@ def _solve_hanoi(
     if n == 0:
         return []
     return (
-        _solve_hanoi(n - 1, src, spare, dst)
-        + [(src, dst)]
-        + _solve_hanoi(n - 1, spare, dst, src)
+        _solve_hanoi(n - 1, src, spare, dst) + [(src, dst)] + _solve_hanoi(n - 1, spare, dst, src)
     )
 
 
@@ -131,6 +126,7 @@ def test_three_disk_solve_a_wins(cfg_n3: GameConfig) -> None:
 # ----------------------------------------------------------------------------
 # Trapping: A wins despite a B disk being parked on 3a.
 # ----------------------------------------------------------------------------
+
 
 def test_trapping_strategy_does_not_block_owner_win(cfg_n2: GameConfig) -> None:
     """A interleaves a B disk into 3a; A's ownership-only win still triggers."""
@@ -169,35 +165,18 @@ def test_trapping_with_smaller_b_disk_succeeds(cfg_n3: GameConfig) -> None:
     """
     s = initial_state(cfg_n3)
 
-    # B brings disk 6 to the shared pole. To get to disk 6 (bottom of 1b), B
-    # has to clear disks 2, 4 first. Easiest: dump them on B's goal pole 3b.
-    # bottom..top of 1b: (6, 4, 2). Pop disk 2.
-    moves_to_expose_6: list[tuple[str, object]] = [
-        ("B", Lift("1b")),    # disk 2 in B's hand.
-        ("B", Place("3b")),   # 3b = (2,). Note: this is FINE for now.
-        ("B", Lift("1b")),    # disk 4.
-        ("B", Place("3b")),   # 3b = (2, ?) — but 4 onto 2 is illegal (4>2).
-    ]
-    # The above plan fails; instead, B puts 2 on shared pole, 4 on 3b, then 6
-    # on shared pole (clearing 2 first to 3b is also problematic). Let's plan
-    # carefully:
-    #
-    #   1b stack bottom..top: (6, 4, 2) — top is disk 2.
-    #   We want to lift disk 6. We must clear 2 and 4 onto poles where they fit.
-    #
-    #   Step a: lift 2 from 1b, put on shared pole 2:        2 = (2,)
-    #   Step b: lift 4 from 1b, put on 3b:                  3b = (4,)
-    #   Step c: lift 2 from shared pole, put on 3b on 4:    3b = (4, 2)
-    #   Step d: lift 6 from 1b, put on shared pole:         2 = (6,)
+    # B clears disks 2 and 4 off 1b (bottom..top = (6, 4, 2)) so disk 6 is
+    # exposed, then lifts 6 onto the shared pole:
+    #   lift 2 -> shared pole 2; lift 4 -> 3b; lift 2 -> 3b on 4; lift 6 -> 2.
     moves: list[tuple[str, object]] = [
-        ("B", Lift("1b")),    # picks up 2.
-        ("B", Place("2")),    # shared pole = (2,).
-        ("B", Lift("1b")),    # picks up 4.
-        ("B", Place("3b")),   # 3b = (4,).
-        ("B", Lift("2")),     # picks up 2.
-        ("B", Place("3b")),   # 3b = (4, 2).
-        ("B", Lift("1b")),    # picks up 6.
-        ("B", Place("2")),    # shared pole = (6,).
+        ("B", Lift("1b")),  # picks up 2.
+        ("B", Place("2")),  # shared pole = (2,).
+        ("B", Lift("1b")),  # picks up 4.
+        ("B", Place("3b")),  # 3b = (4,).
+        ("B", Lift("2")),  # picks up 2.
+        ("B", Place("3b")),  # 3b = (4, 2).
+        ("B", Lift("1b")),  # picks up 6.
+        ("B", Place("2")),  # shared pole = (6,).
     ]
     s = play(s, moves)
     assert s.poles["2"] == (6,)
@@ -206,8 +185,8 @@ def test_trapping_with_smaller_b_disk_succeeds(cfg_n3: GameConfig) -> None:
     # A traps disk 6 at the bottom of 3a, then solves 1a (5,3,1) -> 3a using
     # pole 2 (now empty again after A lifts 6 off it).
     a_moves: list[tuple[str, object]] = [
-        ("A", Lift("2")),     # picks up disk 6.
-        ("A", Place("3a")),   # 3a = (6,).  Trap committed.
+        ("A", Lift("2")),  # picks up disk 6.
+        ("A", Place("3a")),  # 3a = (6,).  Trap committed.
     ]
     # Now solve 1a (5,3,1) -> 3a (which already has 6 at bottom) using 2 as spare.
     # The disks A is moving (5,3,1) are all smaller than 6, so they stack
@@ -231,6 +210,7 @@ def test_trapping_with_smaller_b_disk_succeeds(cfg_n3: GameConfig) -> None:
 # DRAW scenarios
 # ----------------------------------------------------------------------------
 
+
 def test_skip_only_game_draws() -> None:
     cfg = build_two_player_config(3, max_turns=6)
     s = initial_state(cfg)
@@ -244,11 +224,11 @@ def test_skip_only_game_draws() -> None:
 
 def test_one_move_short_of_winning_draws() -> None:
     """A is one Place away from winning but runs out of attempts -> DRAW."""
-    cfg = build_two_player_config(1, max_turns=2)   # need 3 moves to win N=1.
+    cfg = build_two_player_config(1, max_turns=2)  # need 3 moves to win N=1.
     s = initial_state(cfg)
     s, r1 = step(s, "A", Lift("1a"))
     assert r1.legal and r1.terminal is None
-    s, r2 = step(s, "A", Lift("1b"))   # illegal (not visible) but burns a turn.
+    s, r2 = step(s, "A", Lift("1b"))  # illegal (not visible) but burns a turn.
     # Cap of 2 hit on attempt #2.
     assert r2.legal is False
     assert r2.illegality is IllegalReason.POLE_NOT_VISIBLE
@@ -279,6 +259,7 @@ def test_burning_budget_with_illegal_actions_locks_in_draw() -> None:
 # Win-on-construction.
 # ----------------------------------------------------------------------------
 
+
 def test_win_on_construction_evaluates_in_player_order(cfg_n2: GameConfig) -> None:
     """If both players satisfy the predicate at t=0, the first one in
     config.players order wins.
@@ -303,12 +284,13 @@ def test_win_on_construction_evaluates_in_player_order(cfg_n2: GameConfig) -> No
     )
     s0 = initial_state(cfg)
     assert s0.status is Status.WON
-    assert s0.winner == "A"   # A is listed first.
+    assert s0.winner == "A"  # A is listed first.
 
 
 # ----------------------------------------------------------------------------
 # Determinism / immutability.
 # ----------------------------------------------------------------------------
+
 
 def test_engine_is_deterministic(cfg_n3: GameConfig) -> None:
     """Same initial state + same move sequence -> same final state, twice."""

@@ -26,10 +26,10 @@ import pytest
 
 from hanoi.modes.random_play import main
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _extract_status(out: str) -> str:
     m = re.search(r"status:\s+(\w+)", out)
@@ -59,6 +59,7 @@ def _extract_step_count(out: str) -> int:
 # ---------------------------------------------------------------------------
 # Happy-path tests
 # ---------------------------------------------------------------------------
+
 
 def test_random_play_is_deterministic(capsys: pytest.CaptureFixture) -> None:
     """Same seed produces identical output on two runs."""
@@ -190,9 +191,11 @@ def test_random_play_default_args_run(capsys: pytest.CaptureFixture) -> None:
 # RandomAgent unit tests
 # ---------------------------------------------------------------------------
 
+
 def test_random_agent_uses_only_observation() -> None:
     """RandomAgent.choose_action must accept an Observation and return an Action."""
     import random as _random
+
     from hanoi.engine import build_two_player_config, initial_state, project
     from hanoi.modes._agent import RandomAgent
 
@@ -207,13 +210,14 @@ def test_random_agent_uses_only_observation() -> None:
 def test_random_agent_raises_on_terminal_observation() -> None:
     """choose_action must raise if legal_actions is empty (terminal state)."""
     import random as _random
+
     from hanoi.engine import (
+        Lift,
+        Place,
         build_two_player_config,
         initial_state,
         project,
         step,
-        Lift,
-        Place,
     )
     from hanoi.modes._agent import RandomAgent
 
@@ -234,6 +238,7 @@ def test_random_agent_raises_on_terminal_observation() -> None:
 def test_random_agent_always_picks_legal_action() -> None:
     """Over many steps the agent only picks actions from legal_actions."""
     import random as _random
+
     from hanoi.engine import build_two_player_config, initial_state, is_terminal, project, step
     from hanoi.modes._agent import RandomAgent
 
@@ -245,6 +250,7 @@ def test_random_agent_always_picks_legal_action() -> None:
     agents = {"A": agent_a, "B": agent_b}
 
     import itertools
+
     for player in itertools.cycle(["A", "B"]):
         if is_terminal(state):
             break
@@ -259,6 +265,7 @@ def test_random_agent_always_picks_legal_action() -> None:
 # ---------------------------------------------------------------------------
 # Error-path tests
 # ---------------------------------------------------------------------------
+
 
 def test_random_play_disks_zero_exits_1(capsys: pytest.CaptureFixture) -> None:
     with pytest.raises(SystemExit) as exc_info:

@@ -35,17 +35,16 @@ Coverage (error paths — all exit 1 before engine is called):
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 import pytest
 
 from hanoi.modes.replay import main
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _write_game(tmp_path: Path, data: dict) -> Path:
     p = tmp_path / "game.json"
@@ -70,6 +69,7 @@ def _n1_win_game() -> dict:
 # ---------------------------------------------------------------------------
 # Happy-path tests
 # ---------------------------------------------------------------------------
+
 
 def test_replay_n1_a_wins(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     path = _write_game(tmp_path, _n1_win_game())
@@ -121,7 +121,9 @@ def test_replay_with_skip_draw(tmp_path: Path, capsys: pytest.CaptureFixture) ->
     assert "winner:        None" in out
 
 
-def test_replay_illegal_moves_are_valid_content(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
+def test_replay_illegal_moves_are_valid_content(
+    tmp_path: Path, capsys: pytest.CaptureFixture
+) -> None:
     """Illegal moves in a replay must not cause a non-zero exit."""
     game = {
         "schema_version": 1,
@@ -191,6 +193,7 @@ def test_replay_n2_a_solos_win(tmp_path: Path, capsys: pytest.CaptureFixture) ->
 # ---------------------------------------------------------------------------
 # Error-path tests (malformed input -> exit 1)
 # ---------------------------------------------------------------------------
+
 
 def test_replay_file_not_found(capsys: pytest.CaptureFixture) -> None:
     with pytest.raises(SystemExit) as exc_info:
@@ -268,7 +271,7 @@ def test_replay_max_turns_zero(tmp_path: Path, capsys: pytest.CaptureFixture) ->
 
 def test_replay_turn_order_not_list(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     data = _n1_win_game()
-    data["turn_order"] = "ABAB"   # string, not list
+    data["turn_order"] = "ABAB"  # string, not list
     path = _write_game(tmp_path, data)
     with pytest.raises(SystemExit) as exc_info:
         main([str(path)])
@@ -327,6 +330,7 @@ def test_replay_move_missing_pole(tmp_path: Path, capsys: pytest.CaptureFixture)
 # Extended happy-path scenarios
 # ---------------------------------------------------------------------------
 
+
 def _n2_a_solo_game() -> dict:
     """N=2: A solos 1a -> 3a using pole 2 as buffer. 6 legal steps, A wins."""
     return {
@@ -368,13 +372,20 @@ def _n3_a_optimal_game() -> dict:
         "config": {"num_disks": 3},
         "turn_order": ["A"] * 14,
         "moves": [
-            {"type": "lift", "pole": "1a"}, {"type": "place", "pole": "3a"},
-            {"type": "lift", "pole": "1a"}, {"type": "place", "pole": "2"},
-            {"type": "lift", "pole": "3a"}, {"type": "place", "pole": "2"},
-            {"type": "lift", "pole": "1a"}, {"type": "place", "pole": "3a"},
-            {"type": "lift", "pole": "2"},  {"type": "place", "pole": "1a"},
-            {"type": "lift", "pole": "2"},  {"type": "place", "pole": "3a"},
-            {"type": "lift", "pole": "1a"}, {"type": "place", "pole": "3a"},
+            {"type": "lift", "pole": "1a"},
+            {"type": "place", "pole": "3a"},
+            {"type": "lift", "pole": "1a"},
+            {"type": "place", "pole": "2"},
+            {"type": "lift", "pole": "3a"},
+            {"type": "place", "pole": "2"},
+            {"type": "lift", "pole": "1a"},
+            {"type": "place", "pole": "3a"},
+            {"type": "lift", "pole": "2"},
+            {"type": "place", "pole": "1a"},
+            {"type": "lift", "pole": "2"},
+            {"type": "place", "pole": "3a"},
+            {"type": "lift", "pole": "1a"},
+            {"type": "place", "pole": "3a"},
         ],
     }
 
@@ -390,19 +401,20 @@ def _n2_trap_game() -> dict:
             {"type": "place", "pole": "3b"},
             {"type": "lift", "pole": "1b"},  # B puts disk 4 on shared pole
             {"type": "place", "pole": "2"},
-            {"type": "lift", "pole": "2"},   # A traps disk 4 on 3a
+            {"type": "lift", "pole": "2"},  # A traps disk 4 on 3a
             {"type": "place", "pole": "3a"},
             {"type": "lift", "pole": "1a"},  # A moves disk 1 to buffer
             {"type": "place", "pole": "2"},
             {"type": "lift", "pole": "1a"},  # A moves disk 3 on top of 4 on 3a
             {"type": "place", "pole": "3a"},
-            {"type": "lift", "pole": "2"},   # A places disk 1 on 3a -> A wins
+            {"type": "lift", "pole": "2"},  # A places disk 1 on 3a -> A wins
             {"type": "place", "pole": "3a"},
         ],
     }
 
 
 # --- N=2 A solo ---
+
 
 def test_replay_n2_a_solo_wins(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     path = _write_game(tmp_path, _n2_a_solo_game())
@@ -418,6 +430,7 @@ def test_replay_n2_a_solo_wins(tmp_path: Path, capsys: pytest.CaptureFixture) ->
 
 
 # --- N=2 B solo ---
+
 
 def test_replay_n2_b_solo_wins(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     path = _write_game(tmp_path, _n2_b_solo_game())
@@ -439,6 +452,7 @@ def test_replay_b_solo_a_undisturbed(tmp_path: Path, capsys: pytest.CaptureFixtu
 
 
 # --- N=3 optimal ---
+
 
 def test_replay_n3_a_wins_in_14_steps(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     path = _write_game(tmp_path, _n3_a_optimal_game())
@@ -467,11 +481,12 @@ def test_replay_n3_step_14_tagged_won(tmp_path: Path, capsys: pytest.CaptureFixt
     main([str(path)])
     out = capsys.readouterr().out
     lines = out.splitlines()
-    step14 = next(l for l in lines if "Step  14" in l or "Step  14" in l)
+    step14 = next(line for line in lines if "Step  14" in line)
     assert "[WON]" in step14
 
 
 # --- Trapping ---
+
 
 def test_replay_trapping_a_wins_with_b_disk_on_3a(
     tmp_path: Path, capsys: pytest.CaptureFixture
@@ -499,9 +514,8 @@ def test_replay_trapping_step_and_attempt_counts(
 
 # --- Illegal moves: step_count vs attempt_count diverge ---
 
-def test_replay_illegal_move_diverges_counts(
-    tmp_path: Path, capsys: pytest.CaptureFixture
-) -> None:
+
+def test_replay_illegal_move_diverges_counts(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     """One illegal move makes attempt_count = step_count + 1."""
     game = {
         "schema_version": 1,
@@ -522,9 +536,7 @@ def test_replay_illegal_move_diverges_counts(
     assert "attempt_count: 4" in out
 
 
-def test_replay_illegal_move_reason_printed(
-    tmp_path: Path, capsys: pytest.CaptureFixture
-) -> None:
+def test_replay_illegal_move_reason_printed(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     game = {
         "schema_version": 1,
         "config": {"num_disks": 1},
@@ -556,7 +568,7 @@ def test_replay_multiple_consecutive_illegals(
             {"type": "lift", "pole": "1b"},  # illegal
             {"type": "lift", "pole": "1b"},  # illegal
             {"type": "lift", "pole": "1b"},  # illegal
-            {"type": "skip"},                # legal
+            {"type": "skip"},  # legal
         ],
     }
     path = _write_game(tmp_path, game)
@@ -584,9 +596,7 @@ def test_replay_hand_occupied_illegal(tmp_path: Path, capsys: pytest.CaptureFixt
     assert "ILLEGAL(HAND_OCCUPIED)" in out
 
 
-def test_replay_place_on_empty_hand_illegal(
-    tmp_path: Path, capsys: pytest.CaptureFixture
-) -> None:
+def test_replay_place_on_empty_hand_illegal(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     """Placing with empty hand -> ILLEGAL(HAND_EMPTY)."""
     game = {
         "schema_version": 1,
@@ -608,10 +618,10 @@ def test_replay_placement_rule_violated(tmp_path: Path, capsys: pytest.CaptureFi
         "config": {"num_disks": 2},
         "turn_order": ["A", "A", "A", "A", "A"],
         "moves": [
-            {"type": "lift", "pole": "1a"},   # hand = disk 1
-            {"type": "place", "pole": "2"},    # 2 = (1)
-            {"type": "lift", "pole": "1a"},   # hand = disk 3
-            {"type": "place", "pole": "2"},    # 3 on top of 1 — ILLEGAL
+            {"type": "lift", "pole": "1a"},  # hand = disk 1
+            {"type": "place", "pole": "2"},  # 2 = (1)
+            {"type": "lift", "pole": "1a"},  # hand = disk 3
+            {"type": "place", "pole": "2"},  # 3 on top of 1 — ILLEGAL
             {"type": "skip"},
         ],
     }
@@ -621,9 +631,7 @@ def test_replay_placement_rule_violated(tmp_path: Path, capsys: pytest.CaptureFi
     assert "ILLEGAL(PLACEMENT_RULE)" in out
 
 
-def test_replay_lift_from_empty_pole_illegal(
-    tmp_path: Path, capsys: pytest.CaptureFixture
-) -> None:
+def test_replay_lift_from_empty_pole_illegal(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     """Lifting from an empty pole -> ILLEGAL(POLE_EMPTY)."""
     game = {
         "schema_version": 1,
@@ -639,9 +647,8 @@ def test_replay_lift_from_empty_pole_illegal(
 
 # --- Unknown player is engine-level illegal, not a driver error ---
 
-def test_replay_unknown_player_exits_0(
-    tmp_path: Path, capsys: pytest.CaptureFixture
-) -> None:
+
+def test_replay_unknown_player_exits_0(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     """An unknown player in turn_order causes ILLEGAL(UNKNOWN_PLAYER), not exit 1."""
     game = {
         "schema_version": 1,
@@ -657,6 +664,7 @@ def test_replay_unknown_player_exits_0(
 
 
 # --- Shared-pole round-trip ---
+
 
 def test_replay_shared_pole_round_trip(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     """A lifts from 1a, parks on shared pole 2, lifts again, places on 3a."""
@@ -679,9 +687,7 @@ def test_replay_shared_pole_round_trip(tmp_path: Path, capsys: pytest.CaptureFix
     assert "2: []" in out
 
 
-def test_replay_b_can_lift_from_shared_pole(
-    tmp_path: Path, capsys: pytest.CaptureFixture
-) -> None:
+def test_replay_b_can_lift_from_shared_pole(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     """B lifts A's disk 1 off the shared pole (the only A disk B can ever see)."""
     game = {
         "schema_version": 1,
@@ -690,7 +696,7 @@ def test_replay_b_can_lift_from_shared_pole(
         "moves": [
             {"type": "lift", "pole": "1a"},
             {"type": "place", "pole": "2"},
-            {"type": "lift", "pole": "2"},   # B lifts A's disk from shared pole
+            {"type": "lift", "pole": "2"},  # B lifts A's disk from shared pole
         ],
     }
     path = _write_game(tmp_path, game)
@@ -702,6 +708,7 @@ def test_replay_b_can_lift_from_shared_pole(
 
 
 # --- DRAW fires before all moves consumed ---
+
 
 def test_replay_draw_fires_before_end_of_turns(
     tmp_path: Path, capsys: pytest.CaptureFixture
@@ -717,11 +724,12 @@ def test_replay_draw_fires_before_end_of_turns(
     main([str(path)])
     out = capsys.readouterr().out
     assert "DRAW" in out
-    assert "Step   4" not in out   # halted before step 4
+    assert "Step   4" not in out  # halted before step 4
     assert "attempt_count: 3" in out
 
 
 # --- Output structure ---
+
 
 def test_replay_final_state_shows_all_five_poles(
     tmp_path: Path, capsys: pytest.CaptureFixture
@@ -733,9 +741,7 @@ def test_replay_final_state_shows_all_five_poles(
         assert pole in out
 
 
-def test_replay_final_state_shows_both_hands(
-    tmp_path: Path, capsys: pytest.CaptureFixture
-) -> None:
+def test_replay_final_state_shows_both_hands(tmp_path: Path, capsys: pytest.CaptureFixture) -> None:
     path = _write_game(tmp_path, _n1_win_game())
     main([str(path)])
     out = capsys.readouterr().out
@@ -744,6 +750,7 @@ def test_replay_final_state_shows_both_hands(
 
 
 # --- Example fixture files ---
+
 
 def test_replay_example_n1_a_wins(capsys: pytest.CaptureFixture) -> None:
     main(["examples/n1_a_wins.json"])
@@ -776,7 +783,7 @@ def test_replay_example_illegal_moves(capsys: pytest.CaptureFixture) -> None:
     main(["examples/illegal_moves_valid_replay.json"])
     out = capsys.readouterr().out
     assert "ILLEGAL" in out
-    assert "WON" in out   # game still concludes correctly
+    assert "WON" in out  # game still concludes correctly
 
 
 def test_replay_example_trapping(capsys: pytest.CaptureFixture) -> None:

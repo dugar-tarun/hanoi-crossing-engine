@@ -11,10 +11,10 @@ from hanoi.engine import (
     build_two_player_config,
 )
 
-
 # ----------------------------------------------------------------------------
 # build_two_player_config
 # ----------------------------------------------------------------------------
+
 
 @pytest.mark.parametrize("n", [1, 2, 3, 5, 10])
 def test_build_two_player_disk_partition(n: int) -> None:
@@ -52,6 +52,7 @@ def test_build_two_player_initial_stacks_top_disk_is_smallest() -> None:
 # GameConfig invariants enforced at __post_init__
 # ----------------------------------------------------------------------------
 
+
 def _basic_kwargs() -> dict:
     return dict(
         players=("A", "B"),
@@ -88,7 +89,7 @@ def test_config_rejects_duplicate_pole_ids() -> None:
 
 def test_config_rejects_initial_stacks_mismatch() -> None:
     kw = _basic_kwargs()
-    kw["initial_stacks"] = {"1a": (1,), "1b": (2,)}     # missing 3a/3b.
+    kw["initial_stacks"] = {"1a": (1,), "1b": (2,)}  # missing 3a/3b.
     with pytest.raises(ConfigError):
         GameConfig(**kw)
 
@@ -103,7 +104,7 @@ def test_config_rejects_duplicate_disks_across_stacks() -> None:
 
 def test_config_rejects_disk_owner_disagreeing_with_stacks() -> None:
     kw = _basic_kwargs()
-    kw["disk_owner"] = {1: "A"}                          # disk 2 placed but unowned.
+    kw["disk_owner"] = {1: "A"}  # disk 2 placed but unowned.
     with pytest.raises(ConfigError):
         GameConfig(**kw)
 

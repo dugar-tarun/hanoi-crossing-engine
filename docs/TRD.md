@@ -25,43 +25,11 @@ These are the interpretations the engine encodes; they will also be documented i
 - **Disk identity = disk size** (globally unique integer). Player A: odd sizes, Player B: even sizes, both 1..2N.
 - **Information hiding lives in the engine, but is orthogonal to win evaluation.** The engine exposes both full state and per-player `Observation` (for agents). Agents must use only `Observation` + `step`; the engine never asks an agent whether it has won.
 
-## 3. Project Layout
-
-```
-hanoi-crossing-engine/
-  pyproject.toml                 # uv-managed, python = "3.11"
-  README.md                      # design decisions, AI-tool disclosure
-  docs/
-    submission.md
-    TRD.md                       # this document
-  src/
-    hanoi/
-      engine/                    
-        __init__.py              # public re-exports
-        config.py                # GameConfig, PoleSpec, build_two_player_config()
-        state.py                 # GameState (frozen), Status
-        actions.py               # Action sum type: Lift | Place | _Skip (SKIP singleton)
-        rules.py                 # legality + win predicate
-        engine.py                # initial_state, step, legal_actions, is_terminal
-        observation.py           # Observation + project()
-        serialization.py         # to_dict / from_dict for state, action, config
-      modes/                     
-        replay.py                # CLI: hanoi-replay path/to/game.json
-        random_play.py           # CLI: hanoi-random --seed 42 --disks 3
-        _agent.py                # tiny RandomAgent using only Observation + step
-  tests/
-    test_rules.py
-    test_engine.py
-    test_observation.py
-    test_replay.py
-    test_random_play.py
-```
-
-## 4. Engine Public API
+## 3. Engine Public API
 
 All symbols below are re-exported from `hanoi.engine`.
 
-### 4.1 `config.py`
+### 3.1 `config.py`
 
 ```python
 PlayerId = str
@@ -99,7 +67,7 @@ class ConfigError(ValueError): ...
 
 `build_two_player_config` is responsible for producing a `GameConfig` that already satisfies all of these; if the caller passes `num_disks <= 0` it raises `ConfigError` before constructing the dataclass.
 
-### 4.2 `state.py`
+### 3.2 `state.py`
 
 ```python
 class Status(Enum):
@@ -122,7 +90,7 @@ Both counters start at `0`. `step_count` measures actual game progress; `attempt
 
 `GameState` is a frozen dataclass; its `poles` mapping is a `MappingProxyType` over a private dict so callers can't mutate it. Each `step()` returns a new `GameState`; unchanged per-pole stacks are reused by reference (tuples are immutable) but the top-level `poles` mapping is rebuilt. Per-state size is `O(num_poles + num_disks)`.
 
-### 4.3 `actions.py`
+### 3.3 `actions.py`
 
 ```python
 @dataclass(frozen=True)
@@ -139,7 +107,7 @@ SKIP: Final[_Skip] = _Skip()
 Action = Lift | Place | _Skip
 ```
 
-### 4.4 `engine.py`
+### 3.4 `engine.py`
 
 ```python
 class IllegalReason(Enum):
@@ -213,7 +181,7 @@ def is_won_for(state: GameState, player: PlayerId) -> bool:
 
 This is the *only* win check the engine uses, and it operates on full state by construction.
 
-### 4.5 `observation.py`
+### 3.5 `observation.py`
 
 ```python
 @dataclass(frozen=True)
@@ -230,9 +198,9 @@ class Observation:
 def project(state: GameState, player: PlayerId) -> Observation: ...
 ```
 
-## 5. Frontends
+## 4. Frontends
 
-### 5.1 Replay (`modes/replay.py`)
+### 4.1 Replay (`modes/replay.py`)
 
 Input JSON:
 
@@ -255,7 +223,7 @@ Input JSON:
 
 **Driver behavior — edge cases.** Malformed input cases listed below exit non-zero *before* the driver calls `engine.step()`. Engine-level results (legal or illegal) never produce a non-zero exit.
 
-### 5.2 Random-play (`modes/random_play.py`)
+### 4.2 Random-play (`modes/random_play.py`)
 
 ```
 hanoi-random --disks 3 --seed 42 --max-turns 5000 --turn-order ABAB...
