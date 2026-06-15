@@ -1,28 +1,7 @@
-"""CLI random-play frontend: ``hanoi-random --disks N --seed S``
+"""CLI random-play frontend: ``hanoi-random --disks N --seed S``.
 
-Usage
------
-::
-
-    hanoi-random --disks 3 --seed 42
-    hanoi-random --disks 2 --seed 7 --max-turns 5000 --turn-order ABABAB
-
-Options
--------
-``--disks N``
-    Number of disks per player (default: 3).
-``--seed S``
-    Integer seed for the RNG.  Omit for a random run.
-``--max-turns T``
-    Hard cap forwarded to ``GameConfig.max_turns`` (default: 1000).
-``--turn-order PATTERN``
-    A string of player characters that is *cycled* until the game ends.
-    Each character must be a valid player id (``"A"`` or ``"B"`` in the
-    2-player layout).  Default: ``"AB"`` (strict alternation).
-
-Exit codes
-----------
-0 — always (the driver exits cleanly regardless of WON / DRAW).
+Plays a 2-player game with random agents. ``--turn-order`` cycles a string of
+player ids (default ``"AB"``) until the game ends. Always exits 0.
 """
 
 from __future__ import annotations
@@ -31,7 +10,6 @@ import argparse
 import itertools
 import random
 import sys
-from typing import Iterator
 
 from hanoi.engine import (
     build_two_player_config,
@@ -44,39 +22,37 @@ from hanoi.engine.config import ConfigError
 from hanoi.modes._agent import RandomAgent
 
 
-# ---------------------------------------------------------------------------
-# Turn-order helpers
-# ---------------------------------------------------------------------------
-
-def _cycle_pattern(pattern: str) -> Iterator[str]:
-    """Yield player ids by cycling *pattern* indefinitely."""
-    for ch in itertools.cycle(pattern):
-        yield ch
-
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
-
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         prog="hanoi-random",
         description="Run a Hanoi Crossing game with random agents.",
     )
     parser.add_argument(
-        "--disks", type=int, default=3, metavar="N",
+        "--disks",
+        type=int,
+        default=3,
+        metavar="N",
         help="number of disks per player (default: 3)",
     )
     parser.add_argument(
-        "--seed", type=int, default=None, metavar="S",
+        "--seed",
+        type=int,
+        default=None,
+        metavar="S",
         help="RNG seed for reproducibility (omit for non-deterministic run)",
     )
     parser.add_argument(
-        "--max-turns", type=int, default=1000, metavar="T",
+        "--max-turns",
+        type=int,
+        default=1000,
+        metavar="T",
         help="hard turn cap forwarded to GameConfig.max_turns (default: 1000)",
     )
     parser.add_argument(
-        "--turn-order", type=str, default="AB", metavar="PATTERN",
+        "--turn-order",
+        type=str,
+        default="AB",
+        metavar="PATTERN",
         help=(
             "player-id string cycled as the turn order, e.g. 'AB' for strict "
             "alternation (default: AB)"
@@ -105,13 +81,11 @@ def main(argv: list[str] | None = None) -> None:
         print(f"ERROR: invalid config: {exc}", file=sys.stderr)
         sys.exit(1)
 
-    # Validate turn_order characters against known players.
     player_set = set(config.players)
     for ch in turn_pattern:
         if ch not in player_set:
             print(
-                f"ERROR: --turn-order contains unknown player {ch!r} "
-                f"(valid: {sorted(player_set)})",
+                f"ERROR: --turn-order contains unknown player {ch!r} (valid: {sorted(player_set)})",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -128,7 +102,7 @@ def main(argv: list[str] | None = None) -> None:
     print(f"Turn pattern: {turn_pattern!r} (cycled)")
     print()
 
-    turn_iter = _cycle_pattern(turn_pattern)
+    turn_iter = itertools.cycle(turn_pattern)
     step_num = 0
 
     for player in turn_iter:
@@ -141,7 +115,7 @@ def main(argv: list[str] | None = None) -> None:
 
         action = agents[player].choose_action(obs)
         state, result = step(state, player, action)
-        step_num += 1
+        step_num += 1  # noqa: SIM113 (counts only steps taken, not loop iterations)
 
         legal_tag = "OK" if result.legal else f"ILLEGAL({result.illegality.name})"
         terminal_tag = f" [{result.terminal.name}]" if result.terminal is not None else ""

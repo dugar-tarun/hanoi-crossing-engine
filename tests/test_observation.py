@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from hanoi.engine import (
+    SKIP,
     GameState,
     Lift,
     Place,
-    SKIP,
     Status,
     legal_actions,
     project,
@@ -22,7 +22,7 @@ def test_observation_hides_opponent_poles(s0_n3: GameState) -> None:
 
 
 def test_observation_hides_opponent_hand(s0_n3: GameState) -> None:
-    s, _ = step(s0_n3, "B", Lift("1b"))   # B picks up disk 2.
+    s, _ = step(s0_n3, "B", Lift("1b"))  # B picks up disk 2.
     obs_a = project(s, "A")
     obs_b = project(s, "B")
     # A's view: own_hand is None (A is empty-handed). B's hand is not exposed.
@@ -49,7 +49,7 @@ def test_observation_legal_actions_match_engine(s0_n3: GameState) -> None:
 
 def test_observation_legal_actions_empty_at_terminal(s0_n1: GameState) -> None:
     s, _ = step(s0_n1, "A", Lift("1a"))
-    s, _ = step(s, "A", Place("3a"))   # A wins.
+    s, _ = step(s, "A", Place("3a"))  # A wins.
     obs = project(s, "A")
     assert obs.status is Status.WON
     assert obs.winner == "A"
@@ -57,8 +57,8 @@ def test_observation_legal_actions_empty_at_terminal(s0_n1: GameState) -> None:
 
 
 def test_observation_counters_mirror_state(s0_n3: GameState) -> None:
-    s, _ = step(s0_n3, "A", Lift("1b"))    # illegal, bumps attempt only.
-    s, _ = step(s, "A", Lift("1a"))        # legal.
+    s, _ = step(s0_n3, "A", Lift("1b"))  # illegal, bumps attempt only.
+    s, _ = step(s, "A", Lift("1a"))  # legal.
     obs = project(s, "A")
     assert obs.step_count == 1
     assert obs.attempt_count == 2
@@ -67,6 +67,6 @@ def test_observation_counters_mirror_state(s0_n3: GameState) -> None:
 def test_observation_unknown_player_returns_empty_view(s0_n1: GameState) -> None:
     obs = project(s0_n1, "Z")
     assert obs.me == "Z"
-    assert obs.visible_poles == {}        # No poles list "Z" in visible_to.
+    assert obs.visible_poles == {}  # No poles list "Z" in visible_to.
     assert obs.own_hand is None
     assert obs.legal_actions == ()

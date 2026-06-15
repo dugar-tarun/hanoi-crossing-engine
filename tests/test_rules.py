@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
+from conftest import make_state
 from hanoi.engine import (
     GameConfig,
-    Status,
     build_two_player_config,
     disks_owned_by,
     goal_pole_of,
@@ -14,12 +14,10 @@ from hanoi.engine import (
     is_won_for,
 )
 
-from conftest import make_state
-
-
 # ----------------------------------------------------------------------------
 # Ownership / goal lookups
 # ----------------------------------------------------------------------------
+
 
 def test_disks_owned_by_n3() -> None:
     cfg = build_two_player_config(3)
@@ -37,6 +35,7 @@ def test_goal_pole_of() -> None:
 # Hanoi placement rule
 # ----------------------------------------------------------------------------
 
+
 @pytest.mark.parametrize(
     "stack,disk,expected",
     [
@@ -44,8 +43,8 @@ def test_goal_pole_of() -> None:
         ((), 99, True),
         ((5,), 3, True),
         ((5, 3), 2, True),
-        ((3,), 5, False),       # bigger on smaller
-        ((3,), 3, False),       # equal not allowed
+        ((3,), 5, False),  # bigger on smaller
+        ((3,), 3, False),  # equal not allowed
         ((5, 3, 1), 2, False),  # smaller-than-2 (1) is on top
     ],
 )
@@ -56,6 +55,7 @@ def test_hanoi_placement_legal(stack: tuple[int, ...], disk: int, expected: bool
 # ----------------------------------------------------------------------------
 # is_won_for: each clause exercised individually
 # ----------------------------------------------------------------------------
+
 
 def test_initial_state_is_not_won(cfg_n3: GameConfig) -> None:
     s = make_state(cfg_n3, poles={"1a": (5, 3, 1), "1b": (6, 4, 2)}, hands={})
@@ -68,7 +68,7 @@ def test_win_clause_hand_must_be_empty(cfg_n2: GameConfig) -> None:
     s = make_state(
         cfg_n2,
         poles={"3a": (3, 1), "1b": (4, 2)},
-        hands={"A": 99, "B": None},   # A holds a phantom disk; clause 1 fails.
+        hands={"A": 99, "B": None},  # A holds a phantom disk; clause 1 fails.
     )
     assert not is_won_for(s, "A")
 
@@ -102,7 +102,7 @@ def test_win_clause_visible_non_goal_pole_must_be_empty(cfg_n2: GameConfig) -> N
     """An opponent disk parked on the shared pole blocks A's win."""
     s = make_state(
         cfg_n2,
-        poles={"3a": (3, 1), "2": (4,), "1b": (2,)},   # B parked disk 4 on 2.
+        poles={"3a": (3, 1), "2": (4,), "1b": (2,)},  # B parked disk 4 on 2.
         hands={"A": None, "B": None},
     )
     assert not is_won_for(s, "A")
@@ -112,7 +112,7 @@ def test_win_clause_a_disk_cannot_be_in_b_hand(cfg_n2: GameConfig) -> None:
     s = make_state(
         cfg_n2,
         poles={"3a": (3,), "1b": (4, 2)},
-        hands={"A": None, "B": 1},     # B is holding A's disk — A is not won.
+        hands={"A": None, "B": 1},  # B is holding A's disk — A is not won.
     )
     assert not is_won_for(s, "A")
 

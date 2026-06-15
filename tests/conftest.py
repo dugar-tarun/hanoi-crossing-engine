@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Mapping
+from collections.abc import Iterable, Mapping
 
 import pytest
 
 from hanoi.engine import (
     GameConfig,
     GameState,
-    Lift,
-    Place,
-    PoleSpec,
-    SKIP,
     Status,
     build_two_player_config,
     initial_state,

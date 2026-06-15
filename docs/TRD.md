@@ -36,7 +36,7 @@ hanoi-crossing-engine/
     TRD.md                       # this document
   src/
     hanoi/
-      engine/                    
+      engine/
         __init__.py              # public re-exports
         config.py                # GameConfig, PoleSpec, build_two_player_config()
         state.py                 # GameState (frozen), Status
@@ -45,7 +45,7 @@ hanoi-crossing-engine/
         engine.py                # initial_state, step, legal_actions, is_terminal
         observation.py           # Observation + project()
         serialization.py         # to_dict / from_dict for state, action, config
-      modes/                     
+      modes/
         replay.py                # CLI: hanoi-replay path/to/game.json
         random_play.py           # CLI: hanoi-random --seed 42 --disks 3
         _agent.py                # tiny RandomAgent using only Observation + step

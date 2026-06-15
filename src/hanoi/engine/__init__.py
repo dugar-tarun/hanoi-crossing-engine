@@ -4,7 +4,7 @@ Importing from ``hanoi.engine`` is the supported way to use the engine; the
 submodules are an implementation detail.
 """
 
-from .actions import Action, Lift, Place, SKIP, _Skip
+from .actions import SKIP, Action, Lift, Place, _Skip
 from .config import (
     ConfigError,
     GameConfig,

@@ -13,6 +13,8 @@ hanoi-random = "hanoi.modes.random_play:main"
 [dependency-groups]
 dev = [
     "pytest>=8.0",
+    "ruff>=0.6",
+    "pre-commit>=3.7",
 ]
 
 [build-system]
@@ -25,3 +27,18 @@ packages = ["src/hanoi"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "SIM", # flake8-simplify
+]

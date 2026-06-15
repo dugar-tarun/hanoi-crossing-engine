@@ -40,21 +40,15 @@ from hanoi.engine.config import ConfigError
 from hanoi.engine.serialization import action_from_dict
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def _die(msg: str, code: int = 1) -> None:
-    """Print an error message to stderr and exit with *code*."""
     print(f"ERROR: {msg}", file=sys.stderr)
     sys.exit(code)
 
 
 def _validate_input(data: Any) -> tuple[int, int, list[str], list[Action]]:
-    """Validate the parsed JSON object and return ``(num_disks, max_turns, turn_order, actions)``.
+    """Validate the parsed JSON and return ``(num_disks, max_turns, turn_order, actions)``.
 
-    Raises ``SystemExit(1)`` on any structural or semantic error discovered
-    before the engine is involved.
+    Raises ``SystemExit(1)`` on any error found before the engine is involved.
     """
     if not isinstance(data, dict):
         _die("top-level JSON value must be an object")
@@ -89,8 +83,7 @@ def _validate_input(data: Any) -> tuple[int, int, list[str], list[Action]]:
 
     if len(moves_data) != len(turn_order):
         _die(
-            f"'moves' length ({len(moves_data)}) must equal "
-            f"'turn_order' length ({len(turn_order)})"
+            f"'moves' length ({len(moves_data)}) must equal 'turn_order' length ({len(turn_order)})"
         )
 
     actions: list[Action] = []
@@ -105,10 +98,6 @@ def _validate_input(data: Any) -> tuple[int, int, list[str], list[Action]]:
     return num_disks, max_turns, list(turn_order), actions
 
 
-# ---------------------------------------------------------------------------
-# Rendering helpers
-# ---------------------------------------------------------------------------
-
 def _render_state(state: Any) -> None:
     print("=== Final State ===")
     print(f"  status:        {state.status.name}")
@@ -122,10 +111,6 @@ def _render_state(state: Any) -> None:
     for player in sorted(state.hands):
         print(f"    {player}: {state.hands[player]}")
 
-
-# ---------------------------------------------------------------------------
-# Entry point
-# ---------------------------------------------------------------------------
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
@@ -162,13 +147,12 @@ def main(argv: list[str] | None = None) -> None:
     print(f"Turn order: {turn_order}")
     print()
 
-    for i, (player, action) in enumerate(zip(turn_order, actions)):
+    for i, (player, action) in enumerate(zip(turn_order, actions, strict=True)):
         state, result = step(state, player, action)
         legal_tag = "OK" if result.legal else f"ILLEGAL({result.illegality.name})"
         terminal_tag = f" [{result.terminal.name}]" if result.terminal is not None else ""
         print(
-            f"  Step {i + 1:3d}: player={player!r}  action={action!r}"
-            f"  -> {legal_tag}{terminal_tag}"
+            f"  Step {i + 1:3d}: player={player!r}  action={action!r}  -> {legal_tag}{terminal_tag}"
         )
         if result.terminal is not None:
             break

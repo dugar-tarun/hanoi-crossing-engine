@@ -1,9 +1,7 @@
 """Pure rule predicates: ownership lookups, Hanoi placement, win check.
 
-Everything in this module is a pure function of ``GameState`` (or
-``GameConfig``) — no I/O, no mutation, no random state. The functions are
-re-used by both ``engine.step`` (to evaluate legality and detect wins) and by
-tests (to assert predicates directly).
+Every function here is a pure function of ``GameState`` / ``GameConfig`` — no
+I/O, mutation, or random state.
 """
 
 from __future__ import annotations
@@ -28,20 +26,11 @@ def hanoi_placement_legal(stack: tuple[int, ...], disk: int) -> bool:
 
 
 def is_won_for(state: GameState, player: PlayerId) -> bool:
-    """Ownership-only win predicate, evaluated against full state.
+    """Win predicate for ``player``, total over any state.
 
-    ``player`` wins iff:
-
-    1. ``state.hands[player] is None`` (their hand is empty).
-    2. Every disk owned by ``player`` sits on ``player``'s designated goal pole.
-    3. No disk owned by ``player`` exists anywhere else (other poles, or any hand).
-    4. Every pole visible to ``player`` other than their goal pole is *completely*
-       empty — including disks owned by other players. In the 2-player layout
-       this reduces to: the shared pole must be empty.
-
-    The check is total over the state — illegal-looking states (e.g. an empty
-    pole that should be empty) do not raise; the predicate just returns the
-    answer.
+    ``player`` wins iff their hand is empty, every disk they own sits on their
+    goal pole (and nowhere else, including hands), and every other pole visible
+    to them is completely empty.
     """
     if state.hands[player] is not None:
         return False

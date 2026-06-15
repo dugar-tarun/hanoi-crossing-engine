@@ -5,9 +5,9 @@ from __future__ import annotations
 import json
 
 from hanoi.engine import (
+    SKIP,
     Lift,
     Place,
-    SKIP,
     action_from_dict,
     action_to_dict,
     build_two_player_config,
@@ -44,7 +44,7 @@ def test_state_roundtrip_self_contained() -> None:
     cfg = build_two_player_config(2)
     s0 = initial_state(cfg)
     s1, _ = step(s0, "A", Lift("1a"))
-    s2, _ = step(s1, "A", Place("2"))   # disk 1 onto pole 2.
+    s2, _ = step(s1, "A", Place("2"))  # disk 1 onto pole 2.
 
     data = state_to_dict(s2)
     json.dumps(data)

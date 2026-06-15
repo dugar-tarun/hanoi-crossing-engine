@@ -1,16 +1,16 @@
 """``GameState`` (frozen) and ``Status``.
 
-A ``GameState`` is fully immutable: ``poles`` is wrapped in a ``MappingProxyType``
-and each per-pole stack is a tuple. Every ``step()`` produces a new ``GameState``
-that may share unchanged stack tuples by reference for efficiency.
+A ``GameState`` is fully immutable: ``poles``/``hands`` are read-only
+``MappingProxyType`` and each per-pole stack is a tuple. ``step()`` returns a
+new state that may share unchanged stack tuples by reference.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum, auto
 from types import MappingProxyType
-from typing import Mapping
 
 from .config import GameConfig, PlayerId, PoleId
 

@@ -8,15 +8,14 @@ from __future__ import annotations
 
 import pytest
 
+from conftest import make_state
 from hanoi.engine import (
-    ConfigError,
+    SKIP,
     GameConfig,
     GameState,
     IllegalReason,
     Lift,
     Place,
-    PoleSpec,
-    SKIP,
     Status,
     StepResult,
     Terminal,
@@ -27,12 +26,10 @@ from hanoi.engine import (
     step,
 )
 
-from conftest import make_state
-
-
 # ----------------------------------------------------------------------------
 # Construction
 # ----------------------------------------------------------------------------
+
 
 def test_initial_state_zero_counters(s0_n3: GameState) -> None:
     assert s0_n3.step_count == 0
@@ -52,12 +49,12 @@ def test_initial_state_layout_n3(s0_n3: GameState) -> None:
 
 def test_initial_state_immutable(s0_n1: GameState) -> None:
     """Frozen dataclass + MappingProxyType -> mutation attempts must fail."""
-    with pytest.raises(Exception):
-        s0_n1.poles["1a"] = (99,)            # type: ignore[index]
-    with pytest.raises(Exception):
-        s0_n1.hands["A"] = 7                 # type: ignore[index]
-    with pytest.raises(Exception):
-        s0_n1.step_count = 99                # type: ignore[misc]
+    with pytest.raises(TypeError):
+        s0_n1.poles["1a"] = (99,)  # type: ignore[index]
+    with pytest.raises(TypeError):
+        s0_n1.hands["A"] = 7  # type: ignore[index]
+    with pytest.raises(AttributeError):
+        s0_n1.step_count = 99  # type: ignore[misc]
 
 
 def test_initial_state_detects_win_on_construction() -> None:
@@ -85,9 +82,10 @@ def test_initial_state_detects_win_on_construction() -> None:
 # legal_actions structure
 # ----------------------------------------------------------------------------
 
+
 def test_legal_actions_terminal_is_empty(s0_n1: GameState) -> None:
     s, _ = step(s0_n1, "A", Lift("1a"))
-    s, _ = step(s, "A", Place("3a"))    # A wins (B never got a chance).
+    s, _ = step(s, "A", Place("3a"))  # A wins (B never got a chance).
     assert is_terminal(s)
     assert legal_actions(s, "A") == ()
     assert legal_actions(s, "B") == ()
@@ -134,6 +132,7 @@ def test_legal_actions_deterministic_order(s0_n3: GameState) -> None:
 # Step: legal moves and counter discipline
 # ----------------------------------------------------------------------------
 
+
 def test_legal_lift_increments_both_counters(s0_n3: GameState) -> None:
     s, r = step(s0_n3, "A", Lift("1a"))
     assert r.legal and r.illegality is None
@@ -156,8 +155,8 @@ def test_legal_skip_increments_both_counters_and_keeps_state(s0_n1: GameState) -
 
 
 def test_legal_place_drops_disk_and_clears_hand(s0_n2: GameState) -> None:
-    s, _ = step(s0_n2, "A", Lift("1a"))         # A picks up disk 1.
-    s, r = step(s, "A", Place("2"))             # places on shared pole.
+    s, _ = step(s0_n2, "A", Lift("1a"))  # A picks up disk 1.
+    s, r = step(s, "A", Place("2"))  # places on shared pole.
     assert r.legal
     assert s.poles["2"] == (1,)
     assert s.hands["A"] is None
@@ -166,6 +165,7 @@ def test_legal_place_drops_disk_and_clears_hand(s0_n2: GameState) -> None:
 # ----------------------------------------------------------------------------
 # Step: every illegal reason
 # ----------------------------------------------------------------------------
+
 
 def test_illegal_pole_not_visible(s0_n3: GameState) -> None:
     """A cannot lift from B's private pole 1b."""
@@ -191,8 +191,8 @@ def test_illegal_unknown_pole_id_treated_as_not_visible(s0_n1: GameState) -> Non
 
 
 def test_illegal_hand_occupied(s0_n3: GameState) -> None:
-    s, _ = step(s0_n3, "A", Lift("1a"))         # A picks up disk 1.
-    s, r = step(s, "A", Lift("1a"))             # tries to lift again.
+    s, _ = step(s0_n3, "A", Lift("1a"))  # A picks up disk 1.
+    s, r = step(s, "A", Lift("1a"))  # tries to lift again.
     assert r.illegality is IllegalReason.HAND_OCCUPIED
     assert s.step_count == 1
     assert s.attempt_count == 2
@@ -207,7 +207,7 @@ def test_illegal_hand_empty_on_place(s0_n3: GameState) -> None:
 
 
 def test_illegal_pole_empty_on_lift(s0_n3: GameState) -> None:
-    s, r = step(s0_n3, "A", Lift("3a"))         # 3a is empty initially.
+    s, r = step(s0_n3, "A", Lift("3a"))  # 3a is empty initially.
     assert r.illegality is IllegalReason.POLE_EMPTY
     assert s.attempt_count == 1
     assert s.step_count == 0
@@ -215,10 +215,10 @@ def test_illegal_pole_empty_on_lift(s0_n3: GameState) -> None:
 
 def test_illegal_placement_rule(s0_n3: GameState) -> None:
     """Placing a larger disk onto a smaller one violates Hanoi."""
-    s, _ = step(s0_n3, "A", Lift("1a"))         # disk 1 in hand.
-    s, _ = step(s, "A", Place("3a"))            # 3a = (1,)
-    s, _ = step(s, "A", Lift("1a"))             # disk 3 in hand.
-    s, r = step(s, "A", Place("3a"))            # 3 onto 1 -> illegal.
+    s, _ = step(s0_n3, "A", Lift("1a"))  # disk 1 in hand.
+    s, _ = step(s, "A", Place("3a"))  # 3a = (1,)
+    s, _ = step(s, "A", Lift("1a"))  # disk 3 in hand.
+    s, r = step(s, "A", Place("3a"))  # 3 onto 1 -> illegal.
     assert r.illegality is IllegalReason.PLACEMENT_RULE
     # All prior legal actions counted; this one bumped only attempt_count.
     assert s.step_count == 3
@@ -257,6 +257,7 @@ def test_illegal_game_over_does_not_bump_counters() -> None:
 # DRAW transition
 # ----------------------------------------------------------------------------
 
+
 def test_skip_only_run_terminates_in_draw() -> None:
     """All skips, exhaust max_turns -> DRAW (no winner)."""
     cfg = build_two_player_config(3, max_turns=10)
@@ -278,7 +279,7 @@ def test_illegal_actions_can_drive_draw() -> None:
     cfg = build_two_player_config(3, max_turns=3)
     s = initial_state(cfg)
     # Three illegal lifts in a row -> DRAW on the third call.
-    s, r1 = step(s, "A", Lift("1b"))   # illegal: not visible.
+    s, r1 = step(s, "A", Lift("1b"))  # illegal: not visible.
     assert r1.illegality is IllegalReason.POLE_NOT_VISIBLE
     s, r2 = step(s, "A", Lift("1b"))
     assert r2.illegality is IllegalReason.POLE_NOT_VISIBLE
@@ -310,7 +311,7 @@ def test_winning_step_at_cap_prefers_won_over_draw() -> None:
     s = initial_state(cfg)
     s, r1 = step(s, "A", Lift("1a"))
     assert r1.legal and r1.terminal is None
-    s, r2 = step(s, "A", Place("3a"))   # A wins on attempt #2 (== max_turns).
+    s, r2 = step(s, "A", Place("3a"))  # A wins on attempt #2 (== max_turns).
     assert r2.legal is True
     assert r2.terminal is Terminal.WON
     assert r2.winner == "A"
@@ -321,6 +322,7 @@ def test_winning_step_at_cap_prefers_won_over_draw() -> None:
 # ----------------------------------------------------------------------------
 # Skip never transitions to WON
 # ----------------------------------------------------------------------------
+
 
 def test_skip_does_not_check_win_predicate(cfg_n2: GameConfig) -> None:
     """Per TRD: only Place can transition to WON.
@@ -354,6 +356,6 @@ def test_lift_does_not_check_win_predicate(cfg_n2: GameConfig) -> None:
     # A lifts the blocking disk off pole 2 -> ends up holding disk 2 (a B disk).
     s2, r = step(s, "A", Lift("2"))
     assert r.legal is True
-    assert r.terminal is None        # Win not checked on Lift even if the
+    assert r.terminal is None  # Win not checked on Lift even if the
     assert s2.status is Status.IN_PROGRESS  # state would now satisfy the
     # predicate (which it doesn't here — A is now holding a disk).
