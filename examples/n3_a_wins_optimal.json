@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "config": {"num_disks": 3},
+  "turn_order": [
+    "A","A","A","A","A","A","A","A","A","A","A","A","A","A"
+  ],
+  "moves": [
+    {"type": "lift", "pole": "1a"},
+    {"type": "place", "pole": "3a"},
+    {"type": "lift", "pole": "1a"},
+    {"type": "place", "pole": "2"},
+    {"type": "lift", "pole": "3a"},
+    {"type": "place", "pole": "2"},
+    {"type": "lift", "pole": "1a"},
+    {"type": "place", "pole": "3a"},
+    {"type": "lift", "pole": "2"},
+    {"type": "place", "pole": "1a"},
+    {"type": "lift", "pole": "2"},
+    {"type": "place", "pole": "3a"},
+    {"type": "lift", "pole": "1a"},
+    {"type": "place", "pole": "3a"}
+  ]
+}
