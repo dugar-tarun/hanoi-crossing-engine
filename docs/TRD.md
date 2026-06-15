@@ -86,8 +86,6 @@ def build_two_player_config(num_disks: int, *, max_turns: int = 1000) -> GameCon
 class ConfigError(ValueError): ...
 ```
 
-`build_two_player_config(N)` is the only place that knows about `"A"`, `"B"`, `"1a"`, `"1b"`, `"2"`, `"3a"`, `"3b"`. The engine itself reads only the abstract config. A future `build_n_player_config(N, k)` is purely additive.
-
 **Invariants (enforced in `GameConfig.__post_init__`; violation raises `ConfigError`).** These are the only place in the engine that may raise after construction; every other engine function is total.
 
 1. `len(players) >= 1` and `len(set(players)) == len(players)` (no duplicate player ids).
