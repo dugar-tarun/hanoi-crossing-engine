@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "config": {"num_disks": 2, "max_turns": 6},
+  "turn_order": ["A", "B", "A", "B", "A", "B"],
+  "moves": [
+    {"type": "skip"},
+    {"type": "skip"},
+    {"type": "skip"},
+    {"type": "skip"},
+    {"type": "skip"},
+    {"type": "skip"}
+  ]
+}

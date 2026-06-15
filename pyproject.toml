@@ -6,6 +6,10 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
 
+[project.scripts]
+hanoi-replay = "hanoi.modes.replay:main"
+hanoi-random = "hanoi.modes.random_play:main"
+
 [dependency-groups]
 dev = [
     "pytest>=8.0",

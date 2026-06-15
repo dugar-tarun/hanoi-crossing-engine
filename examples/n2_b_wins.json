@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "config": {"num_disks": 2},
+  "turn_order": ["B", "B", "B", "B", "B", "B"],
+  "moves": [
+    {"type": "lift", "pole": "1b"},
+    {"type": "place", "pole": "2"},
+    {"type": "lift", "pole": "1b"},
+    {"type": "place", "pole": "3b"},
+    {"type": "lift", "pole": "2"},
+    {"type": "place", "pole": "3b"}
+  ]
+}
