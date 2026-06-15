@@ -153,30 +153,7 @@ Reaching `max_turns` on either a legal or illegal step transitions the state to 
 def goal_pole_of(config: GameConfig, player: PlayerId) -> PoleId: ...
 def disks_owned_by(config: GameConfig, player: PlayerId) -> frozenset[int]: ...
 
-def is_won_for(state: GameState, player: PlayerId) -> bool:
-    if state.hands[player] is not None:
-        return False
-    owned = disks_owned_by(state.config, player)
-    goal  = goal_pole_of(state.config, player)
-    on_goal = {d for d in state.poles[goal] if state.config.disk_owner[d] == player}
-    if on_goal != owned:
-        return False
-    # No owned disk lives anywhere else.
-    for pid, stack in state.poles.items():
-        if pid == goal:
-            continue
-        if any(state.config.disk_owner[d] == player for d in stack):
-            return False
-    for other_player, held in state.hands.items():
-        if held is not None and state.config.disk_owner[held] == player:
-            return False
-    # Every visible non-goal pole must be completely empty (any ownership).
-    # In the 2-player layout this is just the shared pole (pole 2).
-    for spec in state.config.poles:
-        if spec.id != goal and player in spec.visible_to:
-            if state.poles[spec.id]:
-                return False
-    return True
+def is_won_for(state: GameState, player: PlayerId) -> bool: ...
 ```
 
 This is the *only* win check the engine uses, and it operates on full state by construction.
