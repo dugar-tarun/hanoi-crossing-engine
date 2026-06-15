@@ -4,6 +4,21 @@ A deterministic, fully-testable game engine for **Hanoi Crossing** — a two-pla
 variant of the Tower of Hanoi where each player races to move their disks across
 a shared board onto their goal pole.
 
+## Documentation
+
+The full design and rules live in the Technical Requirements Document at
+[`docs/TRD.md`](docs/TRD.md). It covers:
+
+- **Scope and goals** — a correct, deterministic, fully testable engine.
+- **Key rule decisions** — the win condition (ownership + shared-pole cleared,
+  evaluated on full state), disk "trapping" as a legal strategy, win-check
+  timing, illegal-action semantics, external turn order vs. internal turn
+  counting, the `max_turns` DRAW cap, and disk identity = disk size.
+- **Engine public API** — the symbols re-exported from `hanoi.engine`
+  (`config.py`, `state.py`, `actions.py`, `engine.py`, `observation.py`).
+- **Frontends** — the `replay` and `random_play` CLI modes, including the
+  replay JSON schema.
+
 ## Quick Start
 
 Requires **Python 3.11+**. This project uses [uv](https://docs.astral.sh/uv/).
@@ -101,23 +116,6 @@ uv run hanoi-replay examples/<file>.json
 > Note: `hanoi-replay` applies exactly the moves in the file and prints the
 > resulting state. If the move list doesn't reach a win or the `max_turns` draw
 > cap, the final status is `IN_PROGRESS` (as with `trapping_b_traps_a.json`).
-
-## Documentation
-
-The full design and rules live in the Technical Requirements Document at
-[`docs/TRD.md`](docs/TRD.md). It covers:
-
-- **Scope and goals** — a correct, deterministic, fully testable engine.
-- **Key rule decisions** — the win condition (ownership + shared-pole cleared,
-  evaluated on full state), disk "trapping" as a legal strategy, win-check
-  timing, illegal-action semantics, external turn order vs. internal turn
-  counting, the `max_turns` DRAW cap, and disk identity = disk size.
-- **Engine public API** — the symbols re-exported from `hanoi.engine`
-  (`config.py`, `state.py`, `actions.py`, `engine.py`, `observation.py`).
-- **Frontends** — the `replay` and `random_play` CLI modes, including the
-  replay JSON schema.
-
-Submission notes are in [`docs/submission.md`](docs/submission.md).
 
 ## Development
 
